@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
+
+if [ ! -f /etc/cname-hosts ]; then
+    echo >&2 "File '/etc/cname-hosts' not found. Aborting."
+    exit 1
+fi
+
+hash entr 2>/dev/null || { echo >&2 "Executable 'entr' not found. Aborting. Install 'entr' from http://entrproject.org/"; exit 2; }
+
+trap "cname-hosts-gen --clean" INT
+
+ls /etc/cname-hosts | entr cname-hosts-gen
