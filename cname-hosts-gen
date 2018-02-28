@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
+
+# Clean old CNAME entries (the lines ending in #CNAME)
+sed -i.bak "/#CNAME$/d" /etc/hosts
+
+if [ "$#" -lt 1 ] || [ "$1" != "--clean" ]; then
+    # For each line in /etc/cname-hosts
+    while read -r line
+    do
+        [ -z "$line" ] && continue
+        IFS=" " read first rest <<< "$line"
+        ip=`nslookup $first | awk '/^Address: / { print $2 }'`
+        echo "$ip $rest #CNAME" >> /etc/hosts
+    done < "/etc/cname-hosts"
+else
+    echo "Cleaning /etc/hosts..."
+fi
