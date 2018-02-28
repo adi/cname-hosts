@@ -16,4 +16,4 @@ trap "cname-hosts-gen --clean" INT
 
 while sleep 30; do echo "x"; done > /tmp/entr-trigger &
 
-ls /etc/cname-hosts /tmp/entr-trigger | entr cname-hosts-gen
+ls /etc/cname-hosts /tmp/entr-trigger | entr sudo cname-hosts-gen
