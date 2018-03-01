@@ -5,6 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# Clean old CNAME entries (the lines ending in #CNAME)
 hosts=""
 while read -r line
 do
@@ -16,12 +17,17 @@ if [ "$#" -lt 1 ] || [ "$1" != "--clean" ]; then
     # For each line in /etc/cname-hosts
     while read -r line
     do
+	(echo "$line" | grep -Eq ^\#) && continue
         [ -z "$line" ] && continue
         IFS=" " read first rest <<< "$line"
         ip=`nslookup $first | awk '/^Address: / { print $2 }'`
-        [ -z "$ip" ] && continue
-        hosts="$hosts$ip $rest #CNAME\n"
+        if [ -z "$ip" ]; then
+            hosts="$hosts#UNKNOWN HOST: $first $rest #CNAME\n"
+        else
+            hosts="$hosts$ip $rest #CNAME\n"
+        fi
     done < "/etc/cname-hosts"
+    echo "Updating /etc/hosts..."
 else
     echo "Cleaning /etc/hosts..."
 fi
